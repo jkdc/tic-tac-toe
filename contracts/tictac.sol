@@ -52,11 +52,12 @@ contract TicTac {
         g.squares[i] = g.xIsNext ? 'X' : 'O';
         g.xIsNext =  !g.xIsNext;
     }
-    
-    function getSquares() public view returns (string[9] memory)
+
+    /*
+    function getSquares() public view returns (string[] memory)
     {
         return g.squares;
-    }
+    }*/
     
     function getSquareValue(uint256 i) public view returns (string memory)
     {
