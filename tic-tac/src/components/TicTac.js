@@ -52,6 +52,25 @@ export default () => (
                                 method="getWinner"
                             />
                         </div>
+                        <div className="status">
+                            <h1>New Game:</h1>
+                            <ContractForm
+                                drizzle={drizzle}
+                                drizzleState={drizzleState}
+                                contract="TicTac"
+                                method="newGame"
+                            />
+                        </div>
+                        <div className="status">
+                            <h1>Winners:</h1>
+                            <ContractData
+                                drizzle={drizzle}
+                                drizzleState={drizzleState}
+                                contract="TicTac"
+                                method="winners"
+                                methodArgs={[0]}
+                            />
+                        </div>
 {/*                        <div className="status">
                             <h1>Square 0:</h1>
                             <ContractData

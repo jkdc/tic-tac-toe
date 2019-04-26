@@ -17,6 +17,7 @@ class Board extends React.Component {
         this.state = {
             squares: Array(9).fill(null),
             xIsNext: true,
+            winner: 0
         };
     }
 
@@ -32,7 +33,7 @@ class Board extends React.Component {
     handleClick(i) {
         const squares = this.state.squares.slice();
 
-        if (this.calculateWinner(squares) || squares[i]) {
+        if (this.state.winner != 0 || squares[i]) {
             return;
         }
         squares[i] = this.state.xIsNext ? 'X' : 'O';
@@ -60,12 +61,12 @@ class Board extends React.Component {
         for (let i = 0; i < lines.length; i++) {
             const [a, b, c] = lines[i];
             if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-                this.checkResultInContract(a, c);
-                return squares[a];
+                console.log('find')
+                this.checkResultInContract(a, b, c);
+                return true;
             }
         }
-
-        return null;
+        return false;
     }
 
     setSquareInContract(position) {
@@ -73,35 +74,55 @@ class Board extends React.Component {
         const contract = drizzle.contracts.TicTac;
         const data = contract.methods.setSquares.cacheSend(position);
         let state = drizzle.store.getState();
-        drizzle.contracts.TicTac.methods.getSquareValue(position).call().then(function(result){
-            console.log(result);
-        });
+        drizzle.contracts.TicTac.methods.getSquareValue(position).call().then((result) => this.calculateWinner(this.state.squares));
     }
 
     getSquareFromContract(position) {
         const { drizzle, drizzleState } = this.props.drizzleContext;
         const contract = drizzle.contracts.TicTac;
-        drizzle.contracts.TicTac.methods.getSquareValue(position).call().then((value) => this.updateSquareValue(position, value));
-
+        drizzle.contracts.TicTac.methods.getSquareValue(position).call().then((value) => {
+            this.updateSquareValue(position, value);
+        //    this.calculateWinner(this.state.squares);   
+        });
     }
 
     updateSquareValue(position, value) {
         this.state.squares[position] = value;
     }
 
-    checkResultInContract(start, end) {
+    getNext() {
         const { drizzle, drizzleState } = this.props.drizzleContext;
         const contract = drizzle.contracts.TicTac;
-        contract.methods.setSquares.checkRow(start, end);
+        contract.methods.getXIsNext().call().then((value) => {
+            //status = 'Next player: ' + (value ? 'X' : 'O');
+            this.state.xIsNext = value;
+        });
+    }
+
+    checkResultInContract(a, b, c) {
+        const { drizzle, drizzleState } = this.props.drizzleContext;
+        const contract = drizzle.contracts.TicTac;
+        this.state.winner = contract.methods.checkRow.cacheSend(a, b, c);
+    }
+
+    getWinners() {
+        const { drizzle, drizzleState } = this.props.drizzleContext;
+        const contract = drizzle.contracts.TicTac;
+        contract.methods.getWinners().call()/*.then((value) => {
+            console.log(value);    
+        });*/
+        console.log('joaquin')
+
     }
 
     render() {
-        const winner = this.calculateWinner(this.state.squares);
+        console.log(this.state.winner)
         let status;
-
-        if (winner) {
-            status = 'Winner is ' + winner;
+//this.getWinners();
+        if (this.state.winner ) {
+            status = 'Winner is ' + this.state.winner;
         } else {
+            this.getNext();
             status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
         }
 

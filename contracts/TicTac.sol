@@ -14,6 +14,7 @@ contract TicTac {
     }
 
     Game public g;
+    Game[] public winners;
 
     constructor () public {
         g.playerX = msg.sender;
@@ -40,6 +41,11 @@ contract TicTac {
 
     modifier onlyIfNotWinner {
         require(g.winner == Winner.Any);
+        _;
+    }
+
+    modifier onlyIfWinner {
+        require(g.winner != Winner.Any);
         _;
     }
 
@@ -81,22 +87,30 @@ contract TicTac {
         }
     }
 
-    function checkRow(uint256 start, uint256 end) public onlyIfNotWinner returns (bool)
-    {
-        string memory first = g.squares[start];
-
-        for (uint256 i = start; i<=end; i++){
-            if (!(equal(first, g.squares[i]))) {
-                return false;
-            }
-        }
-
-        setWinner(first);
-        return true;
+    function getXIsNext() public view returns (bool) {
+        return g.xIsNext;
     }
 
-    function setWinner(string memory winnerChar) private onlyIfNotWinner{
-        g.winner = (equal(winnerChar, 'X')) ? Winner.PlayerX : Winner.PlayerO;
+    function checkRow(uint256 a, uint256 b, uint256 c) public onlyIfNotWinner returns (Winner)
+    {
+        string memory first = g.squares[a];
+
+        if ((equal(first, g.squares[a])) && (equal(first, g.squares[b])) && (equal(first, g.squares[c]))) {
+            g.winner = (equal(first, 'X')) ? Winner.PlayerX : Winner.PlayerO;
+        }
+
+        return g.winner;
+    }
+
+    function getWinners() public view returns (Game[] memory){
+        return winners;
+    }
+
+    function newGame() public onlyValidUser onlyIfWinner{
+        winners.push(g);
+        delete g.squares;
+        g.winner = Winner.Any;
+        g.xIsNext = true;
     }
 
     function compare(string memory _a, string memory _b) private returns (int) {
